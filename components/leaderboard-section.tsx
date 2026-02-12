@@ -32,9 +32,16 @@ function TrendIcon({ trend }: { trend: "up" | "down" | "stable" }) {
 
 export function LeaderboardSection() {
   const [data, setData] = useState(LEADERBOARD_DATA)
+  const [mounted, setMounted] = useState(false)
 
-  // Simulated live updates
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Simulated live updates — only after mount
+  useEffect(() => {
+    if (!mounted) return
+
     const interval = setInterval(() => {
       setData((prev) =>
         prev.map((entry) => ({
@@ -45,7 +52,7 @@ export function LeaderboardSection() {
       )
     }, 3000)
     return () => clearInterval(interval)
-  }, [])
+  }, [mounted])
 
   return (
     <section id="leaderboard" className="relative z-10 py-20 md:py-28 px-4">

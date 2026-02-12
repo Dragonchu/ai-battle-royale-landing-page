@@ -15,15 +15,14 @@ interface DataStream {
   id: number
   x: number
   y: number
-  startTime: number
-  color: string
+  progress: number
 }
 
 interface VoteRipple {
   id: number
   x: number
   y: number
-  startTime: number
+  progress: number
 }
 
 const AGENT_NAMES = [
@@ -31,13 +30,16 @@ const AGENT_NAMES = [
   "ECHO-12", "PHANTOM-1", "VIPER-6", "GHOST-8",
 ]
 
+const INITIAL_VOTES = [4200, 3800, 3500, 2900, 2600, 2100, 1800, 1400]
+const INITIAL_TRENDS = [8.2, 5.1, 3.7, -1.2, 6.4, -3.1, 2.8, -0.5]
+
 function generateInitialAgents(): AgentVote[] {
   return AGENT_NAMES.map((name, i) => ({
     id: `agent-${i}`,
     name,
-    votes: Math.floor(Math.random() * 5000) + 1000,
+    votes: INITIAL_VOTES[i],
     color: i % 3 === 0 ? "orange" : "blue",
-    trend: Math.random() * 20 - 5,
+    trend: INITIAL_TRENDS[i],
   }))
 }
 
@@ -96,23 +98,23 @@ function StatBox({ icon: Icon, label, value }: { icon: typeof Zap; label: string
 }
 
 export function LiveVotingDashboard() {
-  const [agents, setAgents] = useState<AgentVote[]>([])
-  const [totalVotes, setTotalVotes] = useState(0)
-  const [viewerCount, setViewerCount] = useState(0)
+  const [mounted, setMounted] = useState(false)
+  const [agents, setAgents] = useState<AgentVote[]>(generateInitialAgents)
+  const [totalVotes, setTotalVotes] = useState(() => INITIAL_VOTES.reduce((a, b) => a + b, 0))
+  const [viewerCount, setViewerCount] = useState(42850)
   const [dataStreams, setDataStreams] = useState<DataStream[]>([])
   const [ripples, setRipples] = useState<VoteRipple[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
   const streamIdRef = useRef(0)
 
   useEffect(() => {
-    const initial = generateInitialAgents()
-    setAgents(initial)
-    setTotalVotes(initial.reduce((sum, a) => sum + a.votes, 0))
-    setViewerCount(Math.floor(Math.random() * 50000) + 10000)
+    setMounted(true)
   }, [])
 
-  // Simulated live updates
+  // Simulated live updates — only after mount
   useEffect(() => {
+    if (!mounted) return
+
     const interval = setInterval(() => {
       setAgents((prev) =>
         prev.map((agent) => ({
@@ -126,17 +128,26 @@ export function LiveVotingDashboard() {
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [mounted])
 
-  // Clean up streams and ripples
+  // Animate streams and ripples using progress-based approach (no Date.now in render)
   useEffect(() => {
+    if (!mounted) return
+
     const interval = setInterval(() => {
-      const now = Date.now()
-      setDataStreams((prev) => prev.filter((s) => now - s.startTime < 2000))
-      setRipples((prev) => prev.filter((r) => now - r.startTime < 800))
-    }, 200)
+      setDataStreams((prev) =>
+        prev
+          .map((s) => ({ ...s, progress: s.progress + 0.1 }))
+          .filter((s) => s.progress < 1)
+      )
+      setRipples((prev) =>
+        prev
+          .map((r) => ({ ...r, progress: r.progress + 0.25 }))
+          .filter((r) => r.progress < 1)
+      )
+    }, 100)
     return () => clearInterval(interval)
-  }, [])
+  }, [mounted])
 
   const handleVote = useCallback((agentId: string) => {
     setAgents((prev) =>
@@ -152,19 +163,16 @@ export function LiveVotingDashboard() {
     const container = containerRef.current
     if (container) {
       const rect = container.getBoundingClientRect()
+      const newStreams: DataStream[] = []
       for (let i = 0; i < 5; i++) {
-        const id = streamIdRef.current++
-        setDataStreams((prev) => [
-          ...prev,
-          {
-            id,
-            x: Math.random() * rect.width,
-            y: rect.height,
-            startTime: Date.now() + i * 100,
-            color: Math.random() > 0.5 ? "hsl(195, 100%, 50%)" : "hsl(25, 100%, 50%)",
-          },
-        ])
+        newStreams.push({
+          id: streamIdRef.current++,
+          x: Math.random() * rect.width,
+          y: rect.height,
+          progress: i * 0.05,
+        })
       }
+      setDataStreams((prev) => [...prev, ...newStreams])
 
       // Add ripple
       setRipples((prev) => [
@@ -173,7 +181,7 @@ export function LiveVotingDashboard() {
           id: streamIdRef.current++,
           x: Math.random() * rect.width,
           y: Math.random() * rect.height * 0.5,
-          startTime: Date.now(),
+          progress: 0,
         },
       ])
     }
@@ -188,40 +196,39 @@ export function LiveVotingDashboard() {
       className="relative w-full max-w-sm md:max-w-md rounded-lg border border-border/40 bg-background/60 backdrop-blur-md overflow-hidden"
     >
       {/* Data streams */}
-      {dataStreams.map((stream) => (
-        <div
-          key={stream.id}
-          className="absolute w-px pointer-events-none"
-          style={{
-            left: stream.x,
-            bottom: 0,
-            height: "100%",
-            background: `linear-gradient(to top, transparent, ${stream.color}, transparent)`,
-            animation: "data-stream 2s ease-out forwards",
-            opacity: 0.4,
-          }}
-        />
-      ))}
-
-      {/* Vote ripples */}
-      {ripples.map((ripple) => {
-        const elapsed = Date.now() - ripple.startTime
-        const progress = Math.min(elapsed / 800, 1)
+      {dataStreams.map((stream) => {
+        const streamColor = stream.id % 2 === 0 ? "hsl(195, 100%, 50%)" : "hsl(25, 100%, 50%)"
         return (
           <div
-            key={ripple.id}
-            className="absolute rounded-full border border-primary/40 pointer-events-none"
+            key={stream.id}
+            className="absolute w-px pointer-events-none"
             style={{
-              left: ripple.x - 20,
-              top: ripple.y - 20,
-              width: 40,
-              height: 40,
-              transform: `scale(${0.8 + progress * 1.5})`,
-              opacity: 1 - progress,
+              left: stream.x,
+              bottom: 0,
+              height: "100%",
+              background: `linear-gradient(to top, transparent, ${streamColor}, transparent)`,
+              opacity: Math.max(0, 0.4 * (1 - stream.progress)),
+              transform: `translateY(${-stream.progress * 200}px)`,
             }}
           />
         )
       })}
+
+      {/* Vote ripples */}
+      {ripples.map((ripple) => (
+        <div
+          key={ripple.id}
+          className="absolute rounded-full border border-primary/40 pointer-events-none"
+          style={{
+            left: ripple.x - 20,
+            top: ripple.y - 20,
+            width: 40,
+            height: 40,
+            transform: `scale(${0.8 + ripple.progress * 1.5})`,
+            opacity: 1 - ripple.progress,
+          }}
+        />
+      ))}
 
       {/* Header */}
       <div className="relative px-4 py-3 border-b border-border/30">

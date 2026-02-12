@@ -55,6 +55,7 @@ function Separator() {
 }
 
 export function CountdownTimer() {
+  const [mounted, setMounted] = useState(false)
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -63,6 +64,12 @@ export function CountdownTimer() {
   })
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const targetDate = new Date()
     targetDate.setDate(targetDate.getDate() + 7)
     targetDate.setHours(0, 0, 0, 0)
@@ -84,7 +91,7 @@ export function CountdownTimer() {
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [mounted])
 
   const pad = (n: number) => n.toString().padStart(2, "0")
 
