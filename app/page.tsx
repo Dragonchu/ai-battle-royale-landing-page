@@ -1,49 +1,19 @@
-import { ArenaCanvas } from "@/components/arena-canvas"
-import { NavBar } from "@/components/nav-bar"
-import { HeroSection } from "@/components/hero-section"
-import { FeaturesSection } from "@/components/features-section"
-import { AgentsShowcase } from "@/components/agents-showcase"
-import { LeaderboardSection } from "@/components/leaderboard-section"
-import { Footer } from "@/components/footer"
+import dynamic from "next/dynamic"
+
+const LandingContent = dynamic(() => import("@/components/landing-content"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+          Initializing Arena
+        </p>
+      </div>
+    </div>
+  ),
+})
 
 export default function Page() {
-  return (
-    <main className="relative min-h-screen overflow-x-hidden">
-      {/* Full-screen animated arena background */}
-      <ArenaCanvas />
-
-      {/* Navigation */}
-      <NavBar />
-
-      {/* Hero with countdown + voting */}
-      <HeroSection />
-
-      {/* Divider */}
-      <div className="relative z-10 flex items-center justify-center px-4">
-        <div className="h-px w-full max-w-6xl bg-border/20" />
-      </div>
-
-      {/* Features / Arena Mechanics */}
-      <FeaturesSection />
-
-      {/* Divider */}
-      <div className="relative z-10 flex items-center justify-center px-4">
-        <div className="h-px w-full max-w-6xl bg-border/20" />
-      </div>
-
-      {/* Agent Showcase */}
-      <AgentsShowcase />
-
-      {/* Divider */}
-      <div className="relative z-10 flex items-center justify-center px-4">
-        <div className="h-px w-full max-w-6xl bg-border/20" />
-      </div>
-
-      {/* Leaderboard */}
-      <LeaderboardSection />
-
-      {/* Footer */}
-      <Footer />
-    </main>
-  )
+  return <LandingContent />
 }
