@@ -53,7 +53,7 @@ export function HeroSection() {
           {/* Action buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
             <a
-              href="#"
+              href="/arena"
               className="relative overflow-hidden px-6 py-2.5 rounded border border-primary/50 bg-primary/10 font-mono text-xs uppercase tracking-[0.15em] text-primary hover:bg-primary/20 transition-all animate-glow-expand"
             >
               <span className="relative z-10">Watch Live</span>
