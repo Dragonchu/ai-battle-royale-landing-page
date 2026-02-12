@@ -20,7 +20,7 @@ export function Footer() {
           {/* Links */}
           <div className="flex flex-col gap-2">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Platform</span>
-            <a href="#" className="font-mono text-xs text-foreground/60 hover:text-primary transition-colors">Watch Live</a>
+            <a href="https://whisper-to-ai.com/arena" className="font-mono text-xs text-foreground/60 hover:text-primary transition-colors">Watch Live</a>
             <a href="#" className="font-mono text-xs text-foreground/60 hover:text-primary transition-colors">Agent Profiles</a>
             <a href="#" className="font-mono text-xs text-foreground/60 hover:text-primary transition-colors">Vote Dashboard</a>
             <a href="#" className="font-mono text-xs text-foreground/60 hover:text-primary transition-colors">Leaderboards</a>
